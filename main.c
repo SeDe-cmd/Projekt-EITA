@@ -29,6 +29,14 @@ void GLCD_Command(char Command){		/* GLCD command function */
 	_delay_us(5);
 	
 }
+void GLCD_draw(){
+	PORTD |=  (1 << RS);	/* Make RS HIGH for data register */
+	PORTD &= ~(1 << RW);	/* Make RW LOW for write operation */
+	PORTD |=  (1 << EN);	/* HIGH-LOW transition on Enable */
+	_delay_us(5);
+	PORTD &= ~(1 << EN);
+	_delay_us(5);
+}
 
 void GLCDinit(){
 	DDRB |= 0xFF;
@@ -75,7 +83,36 @@ uint16_t readadc(uint8_t ch){
 	while((ADCSRA & (1 << ADSC)));    //WAIT UNTIL CONVERSION IS COMPLETE
 	return(ADC);        //RETURN ADC VALUE
 }
+void GLCD_setxpos(char x){
+	PORTD |=  (1 << RS);	/* Make RS HIGH for data register */
+	PORTD &= ~(1 << RW);	/* Make RW LOW for write operation */
+	GLCD_Command(0b10111000 + x);
+	PORTD |=  (1 << EN);	/* Make HIGH-LOW transition on Enable */
+	_delay_us(2);
+	PORTD |=  (1 << EN);	/* Make HIGH-LOW transition on Enable */
+}
 
+void GLCD_setypos(char y){
+	PORTD |=  (1 << RS);	/* Make RS HIGH for data register */
+	PORTD &= ~(1 << RW);	/* Make RW LOW for write operation */
+	GLCD_Command(0b01000000 + y);
+	PORTD |=  (1 << EN);	/* Make HIGH-LOW transition on Enable */
+	_delay_us(2);
+	PORTD |=  (1 << EN);	/* Make HIGH-LOW transition on Enable */
+}
+
+void drawHalf(int xpos, int ypos){
+	GLCD_Command(0x3E);		/* Display OFF */
+	GLCD_setypos(ypos);		/* Set Y address (column=0) */
+	GLCD_setxpos(xpos);
+	GLCD_Command(0x3F);		/* Display ON */
+	for(int x = 0; x < 5; x++){
+		PORTB=(0xFF);
+		GLCD_draw();
+		_delay_us(10);
+	}
+	
+}
 // direction = PINA0 (L/R) eller PINA1 (U/D)
 void checkJoystick(){
 			uint16_t x,y;
@@ -102,8 +139,20 @@ int main(void)
     while (1) 
     {
 		//checkJoystick();
-		GLCD_Command(0x3E);		/* Display OFF */
-		GLCD_Command(0b11000000);
+		for(int i = 0 ; i< 255; i++){
+			for(int j = 0; j < 255; j++){
+				GLCD_setxpos(i);
+				GLCD_setypos(j);
+				for(int x = 0; x < 8; x++){
+					PORTB =(0b11111111);
+					GLCD_draw();
+					_delay_us(10);
+				}
+			}
+		}
+		
+		drawHalf(0,0);
+		GLCD_Command(0x3F);		/* Display ON */
     }
 }
 
