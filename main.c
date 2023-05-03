@@ -17,6 +17,7 @@
 int PlayerPosition = 32;
 int eggPosX = 0;
 int eggPosY = 0;
+int* score = 0;
 
 void GLCD_ClearAll()			/* GLCD all display clear function */
 {
@@ -233,6 +234,7 @@ void despawnEgg(){
 		GLCD_setypos(i);
 		PORTB = 0;
 		GLCD_draw();
+		*score++;
 	}
 }
 int nextEgg = 0;
@@ -263,21 +265,16 @@ void movePlayer(){
 	}
 }
 int slowEgg =0;
-void drawMenu(){
-	for(int i = 0; i < 8; i++){
-		GLCD_setxpos(i);
-		GLCD_setypos(0);
-		PORTB = 0xff;
-		GLCD_draw();
-	}
+
+void drawScore(int* score){
 	for (int k = 0, k <= 20; k+5){
 		GLCD_setxpos(6);
-		GLCD_setypos(37 + k);
+		GLCD_setypos(37 + k); // Kanske behövs ändras ifall det blir samma som ägget 
 		switch(k){
-			case 0: 
+			case 0:
 			drawGraphics(s);
 			break;
-			case 5: 
+			case 5:
 			drawGraphics(c);
 			break;
 			case 10:
@@ -290,7 +287,50 @@ void drawMenu(){
 			drawGraphics(e);
 			break;
 		}
+		
+		switch(*score){
+			case 1:
+			drawGraphics(one);
+			break;
+			case 2:
+			drawGraphics(two);
+			break;
+			case 3:
+			drawGraphics(three);
+			break;
+			case 4:
+			drawGraphics(four);
+			break;
+			case 5:
+			drawGraphics(five);
+			break;
+			case 6:
+			drawGraphics(six);
+			break;
+			case 7:
+			drawGraphics(seven);
+			break;
+			case 8:
+			drawGraphics(eigth);
+			break;
+			case 9:
+			drawGraphics(nine);
+			break;
+			default:
+			drawGraphics(zero);
+			break;
+		}
+		
+}
+
+void drawMenu(){
+	for(int i = 0; i < 8; i++){
+		GLCD_setxpos(i);
+		GLCD_setypos(0);
+		PORTB = 0xff;
+		GLCD_draw();
 	}
+	drawScore(score);
 	GLCD_setxpos(4);
 	GLCD_setypos(32);
 	drawGraphics(topEgg);
