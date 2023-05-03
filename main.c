@@ -158,6 +158,25 @@ void init(){
 	GLCD_ClearAll();
 	InitADC();
 }
+void drawGraphics(int graphic[8][5]){
+	int sum =0;
+	for(int j = 0; j < 5; j ++){
+		for(int i = 0 ; i < 8; i++){
+			if(graphic[i][j] == 1){
+				//sum += pow(2,i)+1;
+				int sumation = 1;
+				for(int x = 0; x< i; x++){
+					sumation = sumation * 2;
+				}
+				sum += sumation;
+			}
+		}
+		
+		PORTB = sum;
+		GLCD_draw();
+		sum = 0;
+	}
+}
 void updateScore(){
 	cs2high();
 	cs1low();
@@ -252,33 +271,11 @@ void drawMenu(){
 		GLCD_draw();
 	}
 	GLCD_setxpos(4);
-	
-	uint16_t sum = 0;
 	GLCD_setypos(32);
-	for(int j = 0; j < 5; j ++){
-		 for(int i = 0 ; i < sizeof(topEgg); i++){
-			 if(topEgg[i][j] == 1){
-				 sum += (int)pow(2,i)+1;
-			 }
-		 }
-	
-		PORTB = sum;
-		GLCD_draw();
-		sum = 0;
-}
+	drawGraphics(topEgg);
 	GLCD_setypos(32);
 	GLCD_setxpos(5);
-	for(int j = 0; j < 5; j ++){
-		for(int i = 0 ; i < sizeof(bottomEgg); i++){
-			if(bottomEgg[i][j] == 1){
-				sum += (int)pow(2,i)+1;
-			}
-		}
-		
-		PORTB = sum;
-		GLCD_draw();
-		sum = 0;
-	}
+	drawGraphics(bottomEgg);
 		 
 	
 }
