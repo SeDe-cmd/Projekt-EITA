@@ -270,6 +270,27 @@ void drawMenu(){
 		PORTB = 0xff;
 		GLCD_draw();
 	}
+	for (int k = 0, k <= 20; k+5){
+		GLCD_setxpos(6);
+		GLCD_setypos(37 + k);
+		switch(k){
+			case 0: 
+			drawGraphics(s);
+			break;
+			case 5: 
+			drawGraphics(c);
+			break;
+			case 10:
+			drawGraphics(o);
+			break;
+			case 15:
+			drawGraphics(r);
+			break;
+			case 20:
+			drawGraphics(e);
+			break;
+		}
+	}
 	GLCD_setxpos(4);
 	GLCD_setypos(32);
 	drawGraphics(topEgg);
