@@ -7,20 +7,74 @@
 #include <time.h>
 #include <stdbool.h>
 #include "graphics.h"
-#define RS PD4		/* Define control pins */
-#define RW PD3
-#define EN PD5
-#define CS1 PD1
-#define CS2 PD0
-#define RST PD2
+//RS sitter på PD4		
+// RW sitter på PD3
+// EN sitter på PD5
+// CS1 sitter på PD1
+// CS2 sitter på PD0
+// RST sitter på PD2
 
 int PlayerPosition = 32;
 int eggPosX = 0;
 int eggPosY = 0;
+int score[] = {0,0,0};
+int hiScore[] = {0,0,1};
 
+void cs1high()
+{
+	PORTD |= (0b00000010);
+}
+
+void cs1low()
+{
+	PORTD &= 0b11111101;
+}
+
+void cs2high()
+{
+	PORTD |= 0b00000001;
+}
+
+void cs2low()
+{
+	PORTD &= 0b11111110;
+}
+void rwHigh(){
+	PORTD |= (0b00001000);
+}
+void rwLow(){
+	PORTD &= 0b11110111;
+}
+void rsHigh(){
+	PORTD |= (0b00010000);
+}
+
+void rsLow(){
+	PORTD &= 0b11101111;
+}
+void rstHigh(){
+	PORTD |= (0b00000100);
+}
+void rstLow(){
+	PORTD &= 0b11111011;
+}
+void enHigh(){
+	PORTD |= (0b00100000);
+}
+void enLow(){
+	PORTD &= 0b11011111;
+}
+void highLowTransition(){
+	enHigh();
+	_delay_us(5);
+	enLow();
+	_delay_us(5);
+}
 void GLCD_ClearAll()			/* GLCD all display clear function */
 {
-	PORTD |= (1 << CS1) | (1 << CS2) | (1 << RST);
+	cs2high();
+	cs1high();
+	rstHigh();
 	for(int i = 0; i < 8; i++){
 		GLCD_Command((0xB8) + i);/* Increment page */
 		for(int j = 0; j < 64; j++){
@@ -33,31 +87,22 @@ void GLCD_ClearAll()			/* GLCD all display clear function */
 
 void GLCD_Command(char Command){		/* GLCD command function */
 	PORTB = Command;		/* Copy command on data pin */
-	PORTD &= ~(1 << RS);	/* Make RS LOW for command register*/
-	PORTD &= ~(1 << RW);	/* Make RW LOW for write operation */
-	PORTD |=  (1 << EN);	/* HIGH-LOW transition on Enable */
-	_delay_us(5);
-	PORTD &= ~(1 << EN);
-	_delay_us(5);
+	rsLow();
+	rwLow();
+	highLowTransition();
 }
 
 void GLCD_Data(char Data){		/* GLCD data function */
 	PORTB = Data;		/* Copy data on data pin */
-	PORTD |=  (1 << RS);	/* Make RS HIGH for data register */
-	PORTD &= ~(1 << RW);	/* Make RW LOW for write operation */
-	PORTD |=  (1 << EN);	/* HIGH-LOW transition on Enable */
-	_delay_us(5);
-	PORTD &= ~(1 << EN);
-	_delay_us(5);
+	rsHigh();
+	rwLow();
+	highLowTransition();
 }
 
 void GLCD_draw(){
-	PORTD |=  (1 << RS);	/* Make RS HIGH for data register */
-	PORTD &= ~(1 << RW);	/* Make RW LOW for write operation */
-	PORTD |=  (1 << EN);	/* HIGH-LOW transition on Enable */
-	_delay_us(5);
-	PORTD &= ~(1 << EN);
-	_delay_us(5);
+	rsHigh();
+	rwLow();
+	highLowTransition();
 }
 
 
@@ -66,73 +111,53 @@ void GLCD_Init(){
 	DDRB = 0xFF;
 	DDRD = 0xFF;
 	/* Select both left & right half of display & Keep reset pin high */
-	PORTD |= (1 << CS1) | (1 << CS2) | (1 << RST);
+	//PORTD |= (1 << CS1) | (1 << CS2) | (1 << RST);
+	cs1high();
+	cs2high();
+	rstHigh();
 	_delay_ms(20);
 	GLCD_Command(0x3E);		/* Display OFF */
 	GLCD_Command(0b01000000);		/* Set Y address (column=0) */
 	GLCD_Command(0b10111000);		/* Set x address (page=0) */
 	GLCD_Command(0xC0);		/* Set z address (start line=0) */
 	GLCD_Command(0x3F);		/* Display ON */
-	PORTD |= (0 << CS1) | (0 << CS2) | (1 << RST);
 	_delay_us(10);
 	
 }
 
 
 void GLCD_setxpos(char x){
-	PORTD &= ~(1 << RS);	/* Make RS HIGH for data register */
-	PORTD &= ~(1 << RW);	/* Make RW LOW for write operation */
+	rsLow();
+	rwLow();
 	GLCD_Command(0b10111000 + x);
-	PORTD |=  (1 << EN);	/* Make HIGH-LOW transition on Enable */
+	enHigh();
 	_delay_us(2);
-	PORTD |=  (1 << EN);	/* Make HIGH-LOW transition on Enable */
 }
 
 void GLCD_setypos(char y){
-	PORTD &= ~(1 << RS);	/* Make RS HIGH for data register */
-	PORTD &= ~(1 << RW);	/* Make RW LOW for write operation */
+	rsLow();
+	rwLow();
 	GLCD_Command(0b01000000 + y);
-	PORTD |=  (1 << EN);	/* Make HIGH-LOW transition on Enable */
+	enHigh();
 	_delay_us(2);
-	PORTD |=  (1 << EN);	/* Make HIGH-LOW transition on Enable */
 }
 
 
-
-void cs2high()
-{
-	PORTD |= (0b00000010);
-}
-
-void cs2low()
-{
-	PORTD &= 0b11111101;
-}
-
-void cs1high()
-{
-	PORTD |= 0b00000001;
-}
-
-void cs1low()
-{
-	PORTD &= 0b11111110;
-}
 
 void InitADC(void){
 	ADMUX|=(1<<REFS0);
 	ADCSRA|=(1<<ADEN)|(1<<ADPS0)|(1<<ADPS1)|(1<<ADPS2); //ENABLE ADC, PRESCALER 128
 }
 
-uint16_t readadc(){
-	ADMUX = (ADMUX & 0xf8)|0;  //Clear last 3 bits of ADMUX, OR with ch
+uint16_t readadc(int ch){
+	ADMUX = (ADMUX & 0xf8)|ch;  //Clear last 3 bits of ADMUX, OR with ch
 	ADCSRA|=(1<<ADSC);        //START CONVERSION
 	while((ADCSRA)&(1<<ADSC));    //WAIT UNTIL CONVERSION IS COMPLETE
 	return(ADC);        //RETURN ADC VALUE
 }
 
 void checkJoystick(){
-	uint16_t x =readadc();      //READ ADC VALUE FROM PA.0
+	uint16_t x =readadc(0);      //READ ADC VALUE FROM PA.0
 	if(x>611){
 		right();
 	}
@@ -177,17 +202,65 @@ void drawGraphics(int graphic[8][5]){
 		sum = 0;
 	}
 }
+void drawNum(int num, int xpos, int ypos){
+	GLCD_setxpos(xpos);
+	GLCD_setypos(ypos);
+	switch(num)
+	{
+		case 0:
+			drawGraphics(zero);
+			break;
+		case 1:
+			drawGraphics(one);
+			break;
+		case 2:
+			drawGraphics(two);
+			break;
+		case 3:
+			drawGraphics(three);
+			break;
+		case 4:
+			drawGraphics(four);
+			break;
+		case 5:
+			drawGraphics(five);
+			break;
+		case 6:
+			drawGraphics(six);
+			break;
+		case 7:
+			drawGraphics(seven);
+			break;
+		case 8:
+			drawGraphics(eight);
+			break;
+		case 9:
+			drawGraphics(nine);
+			break;
+		default:
+			drawGraphics(zero);
+	}
+}
+void drawScoreboard(int board[],int ypos){
+	for(int i = 0; i < 3; i++){
+		drawNum(board[i], ypos, 32 + i*6);
+	}
+}
 void updateScore(){
-	cs2high();
-	cs1low();
-// 	for(int i = 0; i < 8; i++){
-// 		GLCD_setxpos(i);
-// 		GLCD_setypos(32);
-// 		PORTB = 0xff;
-// 		GLCD_draw();
-// 	}
-	cs2low();
 	cs1high();
+	cs2low();
+	score[2] = score[2]+1;
+	if(score[2] == 10){
+		score[1] = score[1] +1;
+		score[2] = 0;
+	}
+	if(score[1] == 10){
+		score[0] = score[0] +1;
+		score[1] = 0;
+	}
+	drawScoreboard(score,0);
+	cs1low();
+	cs2high();
 }
 void checkCol(){
 	if(eggPosY + 5 > PlayerPosition && PlayerPosition + 9 > eggPosY){
@@ -197,6 +270,22 @@ void checkCol(){
 		updateScore();
 	} else {
 		spawnEgg();
+		cs1high();
+		cs2low();
+		if(score[0]*100 + score[1] * 10 + score[2] > hiScore[0]*100 + hiScore[1] * 10 + hiScore[2]){
+			for(int i = 0; i < 3; i++){
+				hiScore[i] = score[i];
+				score[i] = 0;
+			}
+			
+			drawScoreboard(hiScore,1);
+		}
+		for(int i = 0; i< 3; i++){
+			score[i] = 0;
+		}
+		drawScoreboard(score,0);
+		cs2high();
+		cs1low();
 	}
 }
 
@@ -227,32 +316,48 @@ void spawnEgg(){
 		GLCD_draw();
 	}
 }
-void despawnEgg(){
+void despawnEgg(int hEgg){
 	for(int i = eggPosY; i < eggPosY + 5; i++){
 		GLCD_setxpos(eggPosX);
 		GLCD_setypos(i);
 		PORTB = 0;
 		GLCD_draw();
 	}
+	if(hEgg == 1){
+		for(int i = eggPosY; i < eggPosY + 5; i++){
+			GLCD_setxpos(eggPosX+1);
+			GLCD_setypos(i);
+			PORTB = 0;
+			GLCD_draw();
+		}
+	}
 }
-int nextEgg = 0;
+int nextEgg = 1;
 void moveEgg(){
 	if(eggPosX != 7){
-		despawnEgg();
+		despawnEgg(0);
+	} 
+	if(eggPosX != 6){	
+		despawnEgg(1);
 	}
-	if(nextEgg == 1){
+	if(nextEgg == 1 || eggPosX ==6){
 		eggPosX++;
-	} else {
-		
-	}
+		nextEgg =0;
+	} 
 	if(eggPosX >= 7){
 		eggPosX = 7;
 		checkCol();
-	}else {
-		
+	} else if(nextEgg == 0 && eggPosX < 6) {
+		GLCD_setxpos(eggPosX);
+		GLCD_setypos(eggPosY);
+		drawGraphics(topEgg);
+		GLCD_setxpos(eggPosX + 1);
+		GLCD_setypos(eggPosY);
+		drawGraphics(bottomEgg);
+		nextEgg = 1;
+    } else {
 		spawnEgg();
 	}
-	nextEgg = 1;
 }
 void movePlayer(){
 	for(int i = PlayerPosition; i < PlayerPosition + 9; i++){
@@ -270,24 +375,25 @@ void drawMenu(){
 		PORTB = 0xff;
 		GLCD_draw();
 	}
-	GLCD_setxpos(4);
-	GLCD_setypos(32);
-	drawGraphics(topEgg);
-	GLCD_setypos(32);
-	GLCD_setxpos(5);
-	drawGraphics(bottomEgg);
-		 
+	
+	for(int i = 0; i < 3; i++){
+		drawNum(score[i], 0, 32 + i*6);
+	}
+	for(int i = 0; i < 3; i++){
+		drawNum(hiScore[i], 1, 32 + i*6);
+	}
+
 	
 }
 int main(void){
 	eggPosY = rand() % 59;
 	
 	init();
-	cs2high();
-	cs1low();
-	drawMenu();
 	cs1high();
 	cs2low();
+	drawMenu();
+	cs2high();
+	cs1low();
 	spawnEgg();
 	spawnPlayer();
 	
@@ -298,6 +404,6 @@ int main(void){
 			moveEgg();
 			slowEgg = 0;
 		}
-		_delay_ms(20);
+		_delay_ms(10);
 	}
 }
