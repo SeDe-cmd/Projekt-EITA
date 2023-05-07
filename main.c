@@ -18,8 +18,8 @@ int PlayerPosition = 32;
 int eggPosX = 0;
 int eggPosY = 0;
 int score[] = {0,0,0};
-int hiScore[] = {0,0,1};
->>>>>>> main
+int hiScore[] = {0,0,0};
+uint16_t hiScoreAdress = 1;
 
 void cs1high()
 {
@@ -79,7 +79,7 @@ void screen2(){
   cs2high();
   cs1low();
 }
-unsigned char EEPROM_read(unsigned int uiAddress)
+uint8_t EEPROM_read(uint16_t uiAddress)
 {
  /* Wait for completion of previous write /
  while(EECR & (1<<EEPE))
@@ -91,7 +91,7 @@ unsigned char EEPROM_read(unsigned int uiAddress)
  / Return data from Data Register */
  return EEDR;
 }
-void EEPROM_write(unsigned int uiAddress, unsigned char ucData)
+void EEPROM_write(uint16_t uiAddress, uint8_t ucData)
 {
  /* Wait for completion of previous write /
  while(EECR & (1<<EEPE));
@@ -307,7 +307,7 @@ void checkCol(){
 				hiScore[i] = score[i];
 				score[i] = 0;
 			}
-			
+			EEPROM_write(hiScoreAdress, hiScore[0]*100 + hiScore[1] * 10 + hiScore[2]);
 			drawScoreboard(hiScore,1);
 		}
 		for(int i = 0; i< 3; i++){
@@ -420,7 +420,13 @@ void drawScore(){
 			break;
 		}		
 }
-
+void getHiScoreFromEeporm(){
+	uint8_t prevHiScore = EEPROM_read(hiScoreAdress);
+	for(int i = 0 ; i < 3 ; i++){
+		hiScore[i] = prevHiScore %10;
+		prevHiScore = prevHiScore /10;
+	}
+}
 void drawMenu(){
 	for(int i = 0; i < 8; i++){
 		GLCD_setxpos(i);
@@ -428,23 +434,21 @@ void drawMenu(){
 		PORTB = 0xff;
 		GLCD_draw();
 	}
-  drawScore();
+	drawScore();
 	for(int i = 0; i < 3; i++){
 		drawNum(score[i], 0, 32 + i*6);
 	}
 	for(int i = 0; i < 3; i++){
 		drawNum(hiScore[i], 1, 32 + i*6);
 	}
-
-	
 }
 int main(void){
 	eggPosY = rand() % 59;
-	
 	init();
-  screen1();
+	getHiScoreFromEeporm();
+  	screen1();
 	drawMenu();
-  screen2();
+  	screen2();
 	spawnEgg();
 	spawnPlayer();
 	
