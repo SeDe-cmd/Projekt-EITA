@@ -19,6 +19,7 @@ int eggPosX = 0;
 int eggPosY = 0;
 int score[] = {0,0,0};
 int hiScore[] = {0,0,1};
+>>>>>>> main
 
 void cs1high()
 {
@@ -69,6 +70,38 @@ void highLowTransition(){
 	_delay_us(5);
 	enLow();
 	_delay_us(5);
+}
+void screen1(){
+  cs1high();
+  cs2low();
+}
+void screen2(){
+  cs2high();
+  cs1low();
+}
+unsigned char EEPROM_read(unsigned int uiAddress)
+{
+ /* Wait for completion of previous write /
+ while(EECR & (1<<EEPE))
+ ;
+ / Set up address register /
+ EEAR = uiAddress;
+ / Start eeprom read by writing EERE /
+ EECR |= (1<<EERE);
+ / Return data from Data Register */
+ return EEDR;
+}
+void EEPROM_write(unsigned int uiAddress, unsigned char ucData)
+{
+ /* Wait for completion of previous write /
+ while(EECR & (1<<EEPE));
+ / Set up address and Data Registers /
+ EEAR = uiAddress;
+ EEDR = ucData;
+ / Write logical one to EEMPE /
+ EECR |= (1<<EEMPE);
+ / Start eeprom write by setting EEPE */
+ EECR |= (1<<EEPE);
 }
 void GLCD_ClearAll()			/* GLCD all display clear function */
 {
@@ -247,8 +280,7 @@ void drawScoreboard(int board[],int ypos){
 	}
 }
 void updateScore(){
-	cs1high();
-	cs2low();
+  screen1();
 	score[2] = score[2]+1;
 	if(score[2] == 10){
 		score[1] = score[1] +1;
@@ -259,8 +291,7 @@ void updateScore(){
 		score[1] = 0;
 	}
 	drawScoreboard(score,0);
-	cs1low();
-	cs2high();
+	screen2();
 }
 void checkCol(){
 	if(eggPosY + 5 > PlayerPosition && PlayerPosition + 9 > eggPosY){
@@ -270,8 +301,7 @@ void checkCol(){
 		updateScore();
 	} else {
 		spawnEgg();
-		cs1high();
-		cs2low();
+    screen1();
 		if(score[0]*100 + score[1] * 10 + score[2] > hiScore[0]*100 + hiScore[1] * 10 + hiScore[2]){
 			for(int i = 0; i < 3; i++){
 				hiScore[i] = score[i];
@@ -284,8 +314,7 @@ void checkCol(){
 			score[i] = 0;
 		}
 		drawScoreboard(score,0);
-		cs2high();
-		cs1low();
+		screen2();
 	}
 }
 
@@ -368,6 +397,30 @@ void movePlayer(){
 	}
 }
 int slowEgg =0;
+
+void drawScore(){
+	for (int k = 0, k <= 20; k+5){
+		GLCD_setxpos(0);
+		GLCD_setypos(0 + k);
+		switch(k){
+			case 0:
+			drawGraphics(s);
+			break;
+			case 5:
+			drawGraphics(c);
+			break;
+			case 10:
+			drawGraphics(o);
+			break;
+			case 15:
+			drawGraphics(r);
+			break;
+			case 20:
+			drawGraphics(e);
+			break;
+		}		
+}
+
 void drawMenu(){
 	for(int i = 0; i < 8; i++){
 		GLCD_setxpos(i);
@@ -375,7 +428,7 @@ void drawMenu(){
 		PORTB = 0xff;
 		GLCD_draw();
 	}
-	
+  drawScore();
 	for(int i = 0; i < 3; i++){
 		drawNum(score[i], 0, 32 + i*6);
 	}
@@ -389,11 +442,9 @@ int main(void){
 	eggPosY = rand() % 59;
 	
 	init();
-	cs1high();
-	cs2low();
+  screen1();
 	drawMenu();
-	cs2high();
-	cs1low();
+  screen2();
 	spawnEgg();
 	spawnPlayer();
 	
