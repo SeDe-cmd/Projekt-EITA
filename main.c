@@ -394,6 +394,12 @@ void getHiScoreFromEeporm(){
 	}
 }
 
+void drawletter(int letter[8][5], int xpos, int ypos){
+	GLCD_setxpos(xpos);
+	GLCD_setypos(ypos);
+	drawGraphics(letter);
+}
+
 void drawMenu(){
 	for(int i = 0; i < 8; i++){
 		GLCD_setxpos(i);
