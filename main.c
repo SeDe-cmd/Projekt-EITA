@@ -376,15 +376,56 @@ void drawMenu(){
 		GLCD_draw();
 	}
 	
+	int[] word = {s,c,o,r,e};
+	for(int i = 0; i < 6; i++){
+		GLCD_setxpos(0);
+		GLCD_setypos(32+i*6);
+		drawGraphics(word[i]);
+	}
+	
 	for(int i = 0; i < 3; i++){
-		drawNum(score[i], 0, 32 + i*6);
+		drawNum(score[i], 0, 56 + i*6);
 	}
 	for(int i = 0; i < 3; i++){
 		drawNum(hiScore[i], 1, 32 + i*6);
-	}
-
-	
+	}	
 }
+
+void titleScreen(){
+	int[] titel = {ä,g,g,e,t};
+	int[] level = {l,e,v,e,l};
+	drawWord(titel,0,32);
+	drawWord(level,2,32);
+	drawNum(1,3,32);
+	drawNum(2,3,38);
+	drawNum(3,3,44);
+}
+
+while difficultyPick(1){
+	int diff = 1;
+	uint16_t x =readadc(0);      //READ ADC VALUE FROM PA.0
+	if(x>611){
+		switch(diff){
+			case 1:
+			diff++;
+		}
+	}
+	if(x< 590){
+		
+	}
+	if ()
+}
+
+void drawWord(int[] word, int xpos, int ypos){
+	int size = sizeof(word);
+	for (int i = 0; i < size; i++){
+		GLCD_setxpos = xpos;
+		GLCD_setypos(ypos + i*6);
+		drawGraphics(word[i]);
+	}
+}
+
+
 int main(void){
 	eggPosY = rand() % 59;
 	
