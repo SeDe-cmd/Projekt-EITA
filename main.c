@@ -20,6 +20,7 @@ int eggPosX = 0;
 int eggPosY = 0;
 int score[] = {0,0,0};
 int hiScore[] = {0,0,0};
+int diff = 1;
 uint16_t hiScoreAdress = 64;
 
 void cs1high()
@@ -398,6 +399,7 @@ void drawletter(int letter[8][5], int xpos, int ypos){
 	GLCD_setypos(ypos);
 	drawGraphics(letter);
 }
+
 void drawMenu(){
 	for(int i = 0; i < 8; i++){
 		GLCD_setxpos(i);
@@ -419,34 +421,71 @@ void drawMenu(){
 }
 
 void titleScreen(){
-// 	int titel[] = {ä,g,g,e,t};
-// 	int level[] = {l,e,v,e,l};
-// 	drawWord(titel,0,32);
-// 	drawWord(level,2,32);
-// 	drawNum(1,3,32);
-// 	drawNum(2,3,38);
-// 	drawNum(3,3,44);
-}
+	int titel[] = {t,h,e};
+	int egg[] = {e,g,g};
+	int level[] = {l,e,v,e,l};
 
-// while difficultyPick(1){
-// 	int diff = 1;
-// 	uint16_t x =readadc(0);      //READ ADC VALUE FROM PA.0
-// 	if(x>611){
-// 		switch(diff){
-// 			case 1:
-// 			diff++;
-// 		}
-// 	}
-// 	if(x< 590){
-// 		
-// 	}
-// 
-// }
-void pause(){
-	while(1){
-		
+	drawNum(1,3,32);
+	drawNum(2,3,38);
+	drawNum(3,3,44);	
+
+	while difficultyPick(1){
+		uint16_t x = readadc(0);
+
+		if(x>611){
+			switch(diff){
+				case 1:
+				diff++;
+				GLCD_setxpos(4);
+				GLCD_setypos(38);
+				drawGraphics(select);
+				break;
+
+				case 2:
+				diff++
+				GLCD_setxpos(4);
+				GLCD_setypos(44);
+				drawGraphics(select);
+				break;
+
+				case 3:
+				diff = 1;
+				GLCD_setxpos(4);
+				GLCD_setypos(32);
+				drawGraphics(select);
+				break;
+				
+			}
+		}
+		if(x<590){
+			switch(diff){
+				case 1:
+				diff = 3;
+				GLCD_setxpos(4);
+				GLCD_setypos(44);
+				drawGraphics(select);
+				break;
+
+				case 2:
+				diff--;
+				GLCD_setxpos(4);
+				GLCD_setypos(32);
+				drawGraphics(select);
+				break;
+
+				case 3:
+				diff--;
+				GLCD_setxpos(4);
+				GLCD_setypos(38);
+				drawGraphics(select);
+				break;
+			}
+		}
 	}
 }
+
+
+
 
 
 int main(void){
