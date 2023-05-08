@@ -18,7 +18,8 @@ int PlayerPosition = 32;
 int eggPosX = 0;
 int eggPosY = 0;
 int score[] = {0,0,0};
-int hiScore[] = {0,0,1};
+int hiScore[] = {0,0,0};
+uint16_t hiScoreAdress = 1;
 
 void cs1high()
 {
@@ -69,6 +70,38 @@ void highLowTransition(){
 	_delay_us(5);
 	enLow();
 	_delay_us(5);
+}
+void screen1(){
+  cs1high();
+  cs2low();
+}
+void screen2(){
+  cs2high();
+  cs1low();
+}
+uint8_t EEPROM_read(uint16_t uiAddress)
+{
+ /* Wait for completion of previous write */
+ while(EECR & (1<<EEPE))
+ ;
+ /* Set up address register */
+ EEAR = uiAddress;
+ /* Start eeprom read by writing EERE */
+ EECR |= (1<<EERE);
+ /* Return data from Data Register */
+ return EEDR;
+}
+void EEPROM_write(uint16_t uiAddress, uint8_t ucData)
+{
+ /* Wait for completion of previous write */
+ while(EECR & (1<<EEPE));
+ /* Set up address and Data Registers */
+ EEAR = uiAddress;
+ EEDR = ucData;
+ /* Write logical one to EEMPE */
+ EECR |= (1<<EEMPE);
+ /* Start eeprom write by setting EEPE */
+ EECR |= (1<<EEPE);
 }
 void GLCD_ClearAll()			/* GLCD all display clear function */
 {
@@ -247,8 +280,7 @@ void drawScoreboard(int board[],int ypos){
 	}
 }
 void updateScore(){
-	cs1high();
-	cs2low();
+  screen1();
 	score[2] = score[2]+1;
 	if(score[2] == 10){
 		score[1] = score[1] +1;
@@ -259,8 +291,7 @@ void updateScore(){
 		score[1] = 0;
 	}
 	drawScoreboard(score,0);
-	cs1low();
-	cs2high();
+	screen2();
 }
 void checkCol(){
 	if(eggPosY + 5 > PlayerPosition && PlayerPosition + 9 > eggPosY){
@@ -270,22 +301,20 @@ void checkCol(){
 		updateScore();
 	} else {
 		spawnEgg();
-		cs1high();
-		cs2low();
+    screen1();
 		if(score[0]*100 + score[1] * 10 + score[2] > hiScore[0]*100 + hiScore[1] * 10 + hiScore[2]){
 			for(int i = 0; i < 3; i++){
 				hiScore[i] = score[i];
 				score[i] = 0;
 			}
-			
+			EEPROM_write(hiScoreAdress, hiScore[0]*100 + hiScore[1] * 10 + hiScore[2]);
 			drawScoreboard(hiScore,1);
 		}
 		for(int i = 0; i< 3; i++){
 			score[i] = 0;
 		}
 		drawScoreboard(score,0);
-		cs2high();
-		cs1low();
+		screen2();
 	}
 }
 
@@ -368,6 +397,36 @@ void movePlayer(){
 	}
 }
 int slowEgg =0;
+
+void drawScore(){
+	for (int k = 0, k <= 20; k+5){
+		GLCD_setxpos(0);
+		GLCD_setypos(0 + k);
+		switch(k){
+			case 0:
+			drawGraphics(s);
+			break;
+			case 5:
+			drawGraphics(c);
+			break;
+			case 10:
+			drawGraphics(o);
+			break;
+			case 15:
+			drawGraphics(r);
+			break;
+			case 20:
+			drawGraphics(e);
+			break;
+		}		
+}
+void getHiScoreFromEeporm(){
+	uint8_t prevHiScore = EEPROM_read(hiScoreAdress);
+	for(int i = 0 ; i < 3 ; i++){
+		hiScore[i] = prevHiScore %10;
+		prevHiScore = prevHiScore /10;
+	}
+}
 void drawMenu(){
 	for(int i = 0; i < 8; i++){
 		GLCD_setxpos(i);
@@ -383,6 +442,7 @@ void drawMenu(){
 		drawGraphics(word[i]);
 	}
 	
+	drawScore();
 	for(int i = 0; i < 3; i++){
 		drawNum(score[i], 0, 56 + i*6);
 	}
@@ -428,13 +488,11 @@ void drawWord(int[] word, int xpos, int ypos){
 
 int main(void){
 	eggPosY = rand() % 59;
-	
 	init();
-	cs1high();
-	cs2low();
+	getHiScoreFromEeporm();
+  	screen1();
 	drawMenu();
-	cs2high();
-	cs1low();
+  	screen2();
 	spawnEgg();
 	spawnPlayer();
 	
