@@ -7,7 +7,7 @@
 #include <time.h>
 #include <stdbool.h>
 #include "graphics.h"
-//RS sitter på PD4		
+//RS sitter på PD4
 // RW sitter på PD3
 // EN sitter på PD5
 // CS1 sitter på PD1
@@ -72,36 +72,36 @@ void highLowTransition(){
 	_delay_us(5);
 }
 void screen1(){
-  cs1high();
-  cs2low();
+	cs1high();
+	cs2low();
 }
 void screen2(){
-  cs2high();
-  cs1low();
+	cs2high();
+	cs1low();
 }
 uint8_t EEPROM_read(uint16_t uiAddress)
 {
- /* Wait for completion of previous write */
- while(EECR & (1<<EEPE))
- ;
- /* Set up address register */
- EEAR = uiAddress;
- /* Start eeprom read by writing EERE */
- EECR |= (1<<EERE);
- /* Return data from Data Register */
- return EEDR;
+	/* Wait for completion of previous write */
+	while(EECR & (1<<EEPE))
+	;
+	/* Set up address register */
+	EEAR = uiAddress;
+	/* Start eeprom read by writing EERE */
+	EECR |= (1<<EERE);
+	/* Return data from Data Register */
+	return EEDR;
 }
 void EEPROM_write(uint16_t uiAddress, uint8_t ucData)
 {
- /* Wait for completion of previous write */
- while(EECR & (1<<EEPE));
- /* Set up address and Data Registers */
- EEAR = uiAddress;
- EEDR = ucData;
- /* Write logical one to EEMPE */
- EECR |= (1<<EEMPE);
- /* Start eeprom write by setting EEPE */
- EECR |= (1<<EEPE);
+	/* Wait for completion of previous write */
+	while(EECR & (1<<EEPE));
+	/* Set up address and Data Registers */
+	EEAR = uiAddress;
+	EEDR = ucData;
+	/* Write logical one to EEMPE */
+	EECR |= (1<<EEMPE);
+	/* Start eeprom write by setting EEPE */
+	EECR |= (1<<EEPE);
 }
 void GLCD_ClearAll()			/* GLCD all display clear function */
 {
@@ -241,37 +241,37 @@ void drawNum(int num, int xpos, int ypos){
 	switch(num)
 	{
 		case 0:
-			drawGraphics(zero);
-			break;
+		drawGraphics(zero);
+		break;
 		case 1:
-			drawGraphics(one);
-			break;
+		drawGraphics(one);
+		break;
 		case 2:
-			drawGraphics(two);
-			break;
+		drawGraphics(two);
+		break;
 		case 3:
-			drawGraphics(three);
-			break;
+		drawGraphics(three);
+		break;
 		case 4:
-			drawGraphics(four);
-			break;
+		drawGraphics(four);
+		break;
 		case 5:
-			drawGraphics(five);
-			break;
+		drawGraphics(five);
+		break;
 		case 6:
-			drawGraphics(six);
-			break;
+		drawGraphics(six);
+		break;
 		case 7:
-			drawGraphics(seven);
-			break;
+		drawGraphics(seven);
+		break;
 		case 8:
-			drawGraphics(eight);
-			break;
+		drawGraphics(eight);
+		break;
 		case 9:
-			drawGraphics(nine);
-			break;
+		drawGraphics(nine);
+		break;
 		default:
-			drawGraphics(zero);
+		drawGraphics(zero);
 	}
 }
 void drawScoreboard(int board[],int ypos){
@@ -280,7 +280,7 @@ void drawScoreboard(int board[],int ypos){
 	}
 }
 void updateScore(){
-  screen1();
+	screen1();
 	score[2] = score[2]+1;
 	if(score[2] == 10){
 		score[1] = score[1] +1;
@@ -299,9 +299,9 @@ void checkCol(){
 		eggPosX = 0;
 		eggPosY = rand() % 59;
 		updateScore();
-	} else {
+		} else {
 		spawnEgg();
-    screen1();
+		screen1();
 		if(score[0]*100 + score[1] * 10 + score[2] > hiScore[0]*100 + hiScore[1] * 10 + hiScore[2]){
 			for(int i = 0; i < 3; i++){
 				hiScore[i] = score[i];
@@ -322,16 +322,16 @@ void spawnPlayer(){
 	
 	if(PlayerPosition > 63-9){
 		PlayerPosition = 63-9;
-	} else if(PlayerPosition < 0){
+		} else if(PlayerPosition < 0){
 		PlayerPosition = 0;
 	}
 	
-		for(int i = PlayerPosition; i < PlayerPosition + 9; i++){
-			GLCD_setxpos(7);
-			GLCD_setypos(i);
-			PORTB = 0xff;
-			GLCD_draw();
-		}
+	for(int i = PlayerPosition; i < PlayerPosition + 9; i++){
+		GLCD_setxpos(7);
+		GLCD_setypos(i);
+		PORTB = 0xff;
+		GLCD_draw();
+	}
 }
 void spawnEgg(){
 	for(int i = eggPosY; i < eggPosY + 5; i++){
@@ -339,7 +339,7 @@ void spawnEgg(){
 		GLCD_setypos(i);
 		if(i - eggPosY == 0 || i == eggPosY + 4){
 			PORTB = 0b01111110;
-		} else {
+			} else {
 			PORTB  =0b11111111;
 		}
 		GLCD_draw();
@@ -365,18 +365,18 @@ int nextEgg = 1;
 void moveEgg(){
 	if(eggPosX != 7){
 		despawnEgg(0);
-	} 
-	if(eggPosX != 6){	
+	}
+	if(eggPosX != 6){
 		despawnEgg(1);
 	}
 	if(nextEgg == 1 || eggPosX ==6){
 		eggPosX++;
 		nextEgg =0;
-	} 
+	}
 	if(eggPosX >= 7){
 		eggPosX = 7;
 		checkCol();
-	} else if(nextEgg == 0 && eggPosX < 6) {
+		} else if(nextEgg == 0 && eggPosX < 6) {
 		GLCD_setxpos(eggPosX);
 		GLCD_setypos(eggPosY);
 		drawGraphics(topEgg);
@@ -384,7 +384,7 @@ void moveEgg(){
 		GLCD_setypos(eggPosY);
 		drawGraphics(bottomEgg);
 		nextEgg = 1;
-    } else {
+		} else {
 		spawnEgg();
 	}
 }
@@ -405,6 +405,15 @@ void getHiScoreFromEeporm(){
 		prevHiScore = prevHiScore /10;
 	}
 }
+
+void drawWord(int word[], int xpos, int ypos){
+	int size = sizeof(word) / sizeof(word[0]);
+	for (int i = 0; i < size; i++){
+		GLCD_setxpos(xpos);
+		GLCD_setypos(ypos + i*6);
+		drawGraphics(word[i]);
+	}
+}
 void drawMenu(){
 	for(int i = 0; i < 8; i++){
 		GLCD_setxpos(i);
@@ -413,63 +422,55 @@ void drawMenu(){
 		GLCD_draw();
 	}
 	
-	int[] word = {s,c,o,r,e};
-	for(int i = 0; i < 6; i++){
-		GLCD_setxpos(0);
-		GLCD_setypos(32+i*6);
-		drawGraphics(word[i]);
-	}
-	
+	int word[] = {s,c,o,r,e};
+// 	for(int i = 0; i < 6; i++){
+// 		GLCD_setxpos(0);
+// 		GLCD_setypos(32+i*6);
+// 		drawGraphics(word[i]);
+// 	}
+	drawWord(word,3,0);
 	for(int i = 0; i < 3; i++){
-		drawNum(score[i], 0, 56 + i*6);
+		drawNum(score[i], 0, 32 + i*6);
 	}
 	for(int i = 0; i < 3; i++){
 		drawNum(hiScore[i], 1, 32 + i*6);
-	}	
+	}
 }
 
 void titleScreen(){
-	int[] titel = {ä,g,g,e,t};
-	int[] level = {l,e,v,e,l};
-	drawWord(titel,0,32);
-	drawWord(level,2,32);
-	drawNum(1,3,32);
-	drawNum(2,3,38);
-	drawNum(3,3,44);
+// 	int titel[] = {ä,g,g,e,t};
+// 	int level[] = {l,e,v,e,l};
+// 	drawWord(titel,0,32);
+// 	drawWord(level,2,32);
+// 	drawNum(1,3,32);
+// 	drawNum(2,3,38);
+// 	drawNum(3,3,44);
 }
 
-while difficultyPick(1){
-	int diff = 1;
-	uint16_t x =readadc(0);      //READ ADC VALUE FROM PA.0
-	if(x>611){
-		switch(diff){
-			case 1:
-			diff++;
-		}
-	}
-	if(x< 590){
-		
-	}
-	if ()
-}
+// while difficultyPick(1){
+// 	int diff = 1;
+// 	uint16_t x =readadc(0);      //READ ADC VALUE FROM PA.0
+// 	if(x>611){
+// 		switch(diff){
+// 			case 1:
+// 			diff++;
+// 		}
+// 	}
+// 	if(x< 590){
+// 		
+// 	}
+// 
+// }
 
-void drawWord(int[] word, int xpos, int ypos){
-	int size = sizeof(word);
-	for (int i = 0; i < size; i++){
-		GLCD_setxpos = xpos;
-		GLCD_setypos(ypos + i*6);
-		drawGraphics(word[i]);
-	}
-}
 
 
 int main(void){
 	eggPosY = rand() % 59;
 	init();
 	getHiScoreFromEeporm();
-  	screen1();
+	screen1();
 	drawMenu();
-  	screen2();
+	screen2();
 	spawnEgg();
 	spawnPlayer();
 	
