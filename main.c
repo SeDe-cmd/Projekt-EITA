@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include "graphics.h"
 #include <avr/eeprom.h>
+#include <avr/interrupt.h>
 // RS sitter på PD4
 // RW sitter på PD3
 // EN sitter på PD5
@@ -20,9 +21,11 @@ int eggPosX = 0;
 int eggPosY = 0;
 int score[] = {0,0,0};
 int hiScore[] = {0,0,0};
-int diff = 1;
 uint16_t hiScoreAdress = 64;
-
+bool paused = false;
+char paus = 0;
+char gamestate = 0;
+char speed = 10;
 void cs1high()
 {
 	PORTD |= (0b00000010);
@@ -82,7 +85,7 @@ void screen2(){
 	cs1low();
 }
 uint8_t EEPROM_read(uint16_t uiAddress)
-{		
+{
 	uint8_t value;
 	value = eeprom_read_byte ((const uint8_t*)uiAddress);
 	return value;
@@ -90,6 +93,12 @@ uint8_t EEPROM_read(uint16_t uiAddress)
 void EEPROM_write(uint16_t uiAddress, uint8_t ucData)
 {
 	eeprom_update_byte (( uint8_t *) uiAddress, ucData);
+}
+void interrupt_init(){
+	PORTA |= (1<<PINA2);
+	PCMSK0 |= (1<< PCINT2);
+	PCICR |= (1<<PCIE0);
+	sei();
 }
 void GLCD_ClearAll()			/* GLCD all display clear function */
 {
@@ -203,6 +212,7 @@ void init(){
 	GLCD_Init();
 	GLCD_ClearAll();
 	InitADC();
+	interrupt_init();
 }
 void drawGraphics(int graphic[8][5]){
 	int sum =0;
@@ -424,14 +434,26 @@ void titleScreen(){
 	int titel[] = {t,h,e};
 	int egg[] = {e,g,g};
 	int level[] = {l,e,v,e,l};
-
+	for(int i = 0; i < 3; i++){
+		drawletter(titel[i],2,1+i*6);
+	}
+	for(int i = 0; i < 3; i++){
+		
+		drawletter(egg[i],2,28+i*6);
+	}for(int i = 0; i < 5; i++){
+	
+		drawletter(level[i],3,1+i*6);
+	}
 	drawNum(1,3,32);
 	drawNum(2,3,38);
-	drawNum(3,3,44);	
-
-	while difficultyPick(1){
+	drawNum(3,3,44);
+	
+	int diff = 2;
+	GLCD_setxpos(4);
+	GLCD_setypos(38);
+	drawGraphics(select);
+	while (gamestate == 0){
 		uint16_t x = readadc(0);
-
 		if(x>611){
 			switch(diff){
 				case 1:
@@ -439,30 +461,37 @@ void titleScreen(){
 				GLCD_setxpos(4);
 				GLCD_setypos(38);
 				drawGraphics(select);
+				GLCD_setxpos(4);
+				GLCD_setypos(32);
+				drawGraphics(blank);
 				break;
 
 				case 2:
-				diff++
+				diff++;
 				GLCD_setxpos(4);
 				GLCD_setypos(44);
 				drawGraphics(select);
+				GLCD_setxpos(4);
+				GLCD_setypos(38);
+				drawGraphics(blank);
 				break;
 
 				case 3:
-				diff = 1;
+				diff = 3;
 				GLCD_setxpos(4);
-				GLCD_setypos(32);
+				GLCD_setypos(44);
 				drawGraphics(select);
+				drawGraphics(blank);
 				break;
-				
+					
 			}
 		}
 		if(x<590){
 			switch(diff){
 				case 1:
-				diff = 3;
+				diff = 1;
 				GLCD_setxpos(4);
-				GLCD_setypos(44);
+				GLCD_setypos(32);
 				drawGraphics(select);
 				break;
 
@@ -471,6 +500,9 @@ void titleScreen(){
 				GLCD_setxpos(4);
 				GLCD_setypos(32);
 				drawGraphics(select);
+				GLCD_setxpos(4);
+				GLCD_setypos(38);
+				drawGraphics(blank);
 				break;
 
 				case 3:
@@ -478,13 +510,44 @@ void titleScreen(){
 				GLCD_setxpos(4);
 				GLCD_setypos(38);
 				drawGraphics(select);
+				GLCD_setxpos(4);
+				GLCD_setypos(44);
+				drawGraphics(blank);
 				break;
 			}
 		}
+	_delay_ms(250);
+	}
+	if(diff == 1){
+		speed = 15;
+	} else if(diff == 2){
+		speed = 10;
+	} else {
+		speed = 5;
 	}
 }
-
-
+void press(){
+	gamestate = 1;
+}
+void pause(){
+	paus++;
+	while(paus == 1){
+		sei();
+	}
+	paus =0;
+}
+int curr = 0;
+int prev = 0;
+ISR(PCINT0_vect){
+	curr++;
+	if(curr %2 != 0){
+		if(gamestate == 0){
+			press();
+			} else {
+			pause();
+		}
+	}
+}
 
 
 
@@ -494,6 +557,7 @@ int main(void){
 	//EEPROM_write(hiScoreAdress,0);
 	getHiScoreFromEeporm();
 	screen1();
+	titleScreen();
 	drawMenu();
 	screen2();
 	spawnEgg();
@@ -502,7 +566,7 @@ int main(void){
 	while (1){
 		slowEgg += 1;
 		checkJoystick();
-		if(slowEgg == 10){
+		if(slowEgg == speed){
 			moveEgg();
 			slowEgg = 0;
 		}
