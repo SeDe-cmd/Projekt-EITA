@@ -20,6 +20,7 @@ int eggPosY = 0;
 int score[] = {0,0,0};
 int hiScore[] = {0,0,0};
 uint16_t hiScoreAdress = 1;
+int diff = 1;
 
 void cs1high()
 {
@@ -406,14 +407,6 @@ void getHiScoreFromEeporm(){
 	}
 }
 
-void drawWord(int word[], int xpos, int ypos){
-	int size = sizeof(word) / sizeof(word[0]);
-	for (int i = 0; i < size; i++){
-		GLCD_setxpos(xpos);
-		GLCD_setypos(ypos + i*6);
-		drawGraphics(word[i]);
-	}
-}
 void drawMenu(){
 	for(int i = 0; i < 8; i++){
 		GLCD_setxpos(i);
@@ -423,12 +416,7 @@ void drawMenu(){
 	}
 	
 	int word[] = {s,c,o,r,e};
-// 	for(int i = 0; i < 6; i++){
-// 		GLCD_setxpos(0);
-// 		GLCD_setypos(32+i*6);
-// 		drawGraphics(word[i]);
-// 	}
-	drawWord(word,3,0);
+	
 	for(int i = 0; i < 3; i++){
 		drawNum(score[i], 0, 32 + i*6);
 	}
@@ -438,29 +426,70 @@ void drawMenu(){
 }
 
 void titleScreen(){
-// 	int titel[] = {ä,g,g,e,t};
-// 	int level[] = {l,e,v,e,l};
-// 	drawWord(titel,0,32);
-// 	drawWord(level,2,32);
-// 	drawNum(1,3,32);
-// 	drawNum(2,3,38);
-// 	drawNum(3,3,44);
+	int titel[] = {t,h,e};
+	int egg[] = {e,g,g};
+	int level[] = {l,e,v,e,l};
+
+	drawNum(1,3,32);
+	drawNum(2,3,38);
+	drawNum(3,3,44);	
+
+	while difficultyPick(1){
+		uint16_t x = readadc(0);
+
+		if(x>611){
+			switch(diff){
+				case 1:
+				diff++;
+				GLCD_setxpos(4);
+				GLCD_setypos(38);
+				drawGraphics(select);
+				break;
+
+				case 2:
+				diff++
+				GLCD_setxpos(4);
+				GLCD_setypos(44);
+				drawGraphics(select);
+				break;
+
+				case 3:
+				diff = 1;
+				GLCD_setxpos(4);
+				GLCD_setypos(32);
+				drawGraphics(select);
+				break;
+				
+			}
+		}
+		if(x<590){
+			switch(diff){
+				case 1:
+				diff = 3;
+				GLCD_setxpos(4);
+				GLCD_setypos(44);
+				drawGraphics(select);
+				break;
+
+				case 2:
+				diff--;
+				GLCD_setxpos(4);
+				GLCD_setypos(32);
+				drawGraphics(select);
+				break;
+
+				case 3:
+				diff--;
+				GLCD_setxpos(4);
+				GLCD_setypos(38);
+				drawGraphics(select);
+				break;
+			}
+		}
+	}
 }
 
-// while difficultyPick(1){
-// 	int diff = 1;
-// 	uint16_t x =readadc(0);      //READ ADC VALUE FROM PA.0
-// 	if(x>611){
-// 		switch(diff){
-// 			case 1:
-// 			diff++;
-// 		}
-// 	}
-// 	if(x< 590){
-// 		
-// 	}
-// 
-// }
+
 
 
 
