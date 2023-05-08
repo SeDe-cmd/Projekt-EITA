@@ -7,7 +7,8 @@
 #include <time.h>
 #include <stdbool.h>
 #include "graphics.h"
-//RS sitter på PD4
+#include <avr/eeprom.h>
+// RS sitter på PD4
 // RW sitter på PD3
 // EN sitter på PD5
 // CS1 sitter på PD1
@@ -19,7 +20,7 @@ int eggPosX = 0;
 int eggPosY = 0;
 int score[] = {0,0,0};
 int hiScore[] = {0,0,0};
-uint16_t hiScoreAdress = 1;
+uint16_t hiScoreAdress = 64;
 
 void cs1high()
 {
@@ -80,28 +81,14 @@ void screen2(){
 	cs1low();
 }
 uint8_t EEPROM_read(uint16_t uiAddress)
-{
-	/* Wait for completion of previous write */
-	while(EECR & (1<<EEPE))
-	;
-	/* Set up address register */
-	EEAR = uiAddress;
-	/* Start eeprom read by writing EERE */
-	EECR |= (1<<EERE);
-	/* Return data from Data Register */
-	return EEDR;
+{		
+	uint8_t value;
+	value = eeprom_read_byte ((const uint8_t*)uiAddress);
+	return value;
 }
 void EEPROM_write(uint16_t uiAddress, uint8_t ucData)
 {
-	/* Wait for completion of previous write */
-	while(EECR & (1<<EEPE));
-	/* Set up address and Data Registers */
-	EEAR = uiAddress;
-	EEDR = ucData;
-	/* Write logical one to EEMPE */
-	EECR |= (1<<EEMPE);
-	/* Start eeprom write by setting EEPE */
-	EECR |= (1<<EEPE);
+	eeprom_update_byte (( uint8_t *) uiAddress, ucData);
 }
 void GLCD_ClearAll()			/* GLCD all display clear function */
 {
@@ -400,19 +387,16 @@ int slowEgg =0;
 
 void getHiScoreFromEeporm(){
 	uint8_t prevHiScore = EEPROM_read(hiScoreAdress);
-	for(int i = 0 ; i < 3 ; i++){
+	for(int i = 2 ; i >= 0 ; i--){
 		hiScore[i] = prevHiScore %10;
 		prevHiScore = prevHiScore /10;
 	}
 }
 
-void drawWord(int word[], int xpos, int ypos){
-	int size = sizeof(word) / sizeof(word[0]);
-	for (int i = 0; i < size; i++){
-		GLCD_setxpos(xpos);
-		GLCD_setypos(ypos + i*6);
-		drawGraphics(word[i]);
-	}
+void drawletter(int letter[8][5], int xpos, int ypos){
+	GLCD_setxpos(xpos);
+	GLCD_setypos(ypos);
+	drawGraphics(letter);
 }
 void drawMenu(){
 	for(int i = 0; i < 8; i++){
@@ -423,12 +407,9 @@ void drawMenu(){
 	}
 	
 	int word[] = {s,c,o,r,e};
-// 	for(int i = 0; i < 6; i++){
-// 		GLCD_setxpos(0);
-// 		GLCD_setypos(32+i*6);
-// 		drawGraphics(word[i]);
-// 	}
-	drawWord(word,3,0);
+	for(int i = 0; i < 5; i++){
+		drawletter(word[i],0,i*6 + 1);
+	}
 	for(int i = 0; i < 3; i++){
 		drawNum(score[i], 0, 32 + i*6);
 	}
@@ -461,12 +442,17 @@ void titleScreen(){
 // 	}
 // 
 // }
-
+void pause(){
+	while(1){
+		
+	}
+}
 
 
 int main(void){
 	eggPosY = rand() % 59;
 	init();
+	//EEPROM_write(hiScoreAdress,0);
 	getHiScoreFromEeporm();
 	screen1();
 	drawMenu();
