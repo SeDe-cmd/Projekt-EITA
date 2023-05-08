@@ -398,28 +398,6 @@ void movePlayer(){
 }
 int slowEgg =0;
 
-void drawScore(){
-	for (int k = 0, k <= 20; k+5){
-		GLCD_setxpos(0);
-		GLCD_setypos(0 + k);
-		switch(k){
-			case 0:
-			drawGraphics(s);
-			break;
-			case 5:
-			drawGraphics(c);
-			break;
-			case 10:
-			drawGraphics(o);
-			break;
-			case 15:
-			drawGraphics(r);
-			break;
-			case 20:
-			drawGraphics(e);
-			break;
-		}		
-}
 void getHiScoreFromEeporm(){
 	uint8_t prevHiScore = EEPROM_read(hiScoreAdress);
 	for(int i = 0 ; i < 3 ; i++){
@@ -442,7 +420,6 @@ void drawMenu(){
 		drawGraphics(word[i]);
 	}
 	
-	drawScore();
 	for(int i = 0; i < 3; i++){
 		drawNum(score[i], 0, 56 + i*6);
 	}
