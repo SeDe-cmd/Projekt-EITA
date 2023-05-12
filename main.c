@@ -26,6 +26,7 @@ bool paused = false;
 char paus = 0;
 char gamestate = 0;
 char speed = 10;
+void game_over();
 void cs1high()
 {
 	PORTD |= (0b00000010);
@@ -291,6 +292,7 @@ void updateScore(){
 	drawScoreboard(score,0);
 	screen2();
 }
+
 void checkCol(){
 	if(eggPosY + 5 > PlayerPosition && PlayerPosition + 9 > eggPosY){
 		//despawnEgg();
@@ -298,7 +300,6 @@ void checkCol(){
 		eggPosY = rand() % 59;
 		updateScore();
 		} else {
-		spawnEgg();
 		screen1();
 		if(score[0]*100 + score[1] * 10 + score[2] > hiScore[0]*100 + hiScore[1] * 10 + hiScore[2]){
 			for(int i = 0; i < 3; i++){
@@ -313,6 +314,7 @@ void checkCol(){
 		}
 		drawScoreboard(score,0);
 		screen2();
+		game_over();
 	}
 }
 
@@ -433,6 +435,7 @@ void drawMenu(){
 void titleScreen(){
 	int titel[] = {t,h,e};
 	int egg[] = {e,g,g};
+	int diff = 2;
 	int level[] = {l,e,v,e,l};
 	for(int i = 0; i < 3; i++){
 		drawletter(titel[i],2,1+i*6);
@@ -448,7 +451,6 @@ void titleScreen(){
 	drawNum(2,3,38);
 	drawNum(3,3,44);
 	
-	int diff = 2;
 	GLCD_setxpos(4);
 	GLCD_setypos(38);
 	drawGraphics(select);
@@ -520,10 +522,13 @@ void titleScreen(){
 	}
 	if(diff == 1){
 		speed = 15;
+		hiScoreAdress = 32;
 	} else if(diff == 2){
 		speed = 10;
+		hiScoreAdress = 64;
 	} else {
-		speed = 5;
+		speed = 7;
+		hiScoreAdress = 128;
 	}
 }
 void press(){
@@ -540,24 +545,50 @@ int curr = 0;
 int prev = 0;
 ISR(PCINT0_vect){
 	curr++;
+	if(curr == 8){
+		curr = 2;
+	}
 	if(curr %2 != 0){
 		if(gamestate == 0){
 			press();
-			} else {
+		} else {
 			pause();
 		}
 	}
 }
 
-
+void game_over(){
+	GLCD_ClearAll();
+	gamestate = 0;
+	PlayerPosition = 32;
+	despawnEgg(0);
+	despawnEgg(1);
+	eggPosX = 0;
+	eggPosY = rand() % 59;
+	screen1();
+	getHiScoreFromEeporm();
+	drawMenu();
+	titleScreen();
+	getHiScoreFromEeporm();
+	drawMenu();
+	screen2();
+	spawnPlayer();
+// 	eggPosY = 0;
+// 	eggPosX = rand() % 59;
+	slowEgg = 0;
+}
 
 int main(void){
 	eggPosY = rand() % 59;
 	init();
-	//EEPROM_write(hiScoreAdress,0);
-	getHiScoreFromEeporm();
+// 	EEPROM_write(32,0);
+// 	
+// 	EEPROM_write(64,0);
+// 	
+// 	EEPROM_write(128,0);
 	screen1();
 	titleScreen();
+	getHiScoreFromEeporm();
 	drawMenu();
 	screen2();
 	spawnEgg();
